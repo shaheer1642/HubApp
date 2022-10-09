@@ -18,12 +18,14 @@
       "**/*"
     ],
     "ios": {
-      "supportsTablet": true
+      "bundleIdentifier": "com.warframehub.hubapp",
+      "buildNumber": "1.0.0"
     },
     "android": {
+      "package": "com.warframehub.hubapp",
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#FFFFFF"
+        "backgroundColor": "#000e21"
       }
     },
     "web": {
