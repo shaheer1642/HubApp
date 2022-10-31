@@ -4,7 +4,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import uuid from 'react-native-uuid';
 import {eventHandler} from './EventHandler'
 
-var socket=SocketIOClient();
+var socket;
 var session_key=null;
 
 AsyncStorage.getItem('session_key').then(key => {

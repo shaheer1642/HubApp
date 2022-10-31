@@ -7,6 +7,7 @@ import React, { Component } from 'react';
 import { eventHandler } from './EventHandler';
 import {convertUpper,dynamicSort,dynamicSortDesc} from './Functions'
 
+
 class Trading extends Component {
     constructor(props) {
         super(props);
@@ -15,8 +16,8 @@ class Trading extends Component {
             showSellers: 1,
             tabIndex: 0,
             itemTrades: {},
-            lichTrades: [],
-            rivenTrades: [],
+            lichTrades: {},
+            rivenTrades: {},
             loadingTrades: true,
             searchItem: '',
             formAddItem_show: false,
@@ -26,7 +27,9 @@ class Trading extends Component {
             formAddItem_itemName: '',
             alertModal_show: false,
             alertModal_text: '',
-            menuModal_show: false
+            menuModal_show: false,
+            imageModal_show: false,
+            imageModal_url: ''
         }
     };
 
@@ -59,17 +62,26 @@ class Trading extends Component {
         var itemTrades = {}
         data.response.itemTrades.forEach(item => {
             if (!itemTrades[item.item_id])
-                itemTrades[item.item_id] = {item_id: item.item_id,item_url: item.item_url,tags: item.tags, icon_url: item.icon_url, sellers: [], buyers: []}
+                itemTrades[item.item_id] = {item_id: item.item_id, item_url: item.item_url,tags: item.tags, icon_url: item.icon_url, sellers: [], buyers: []}
             if (item.order_type == 'wts')
                 itemTrades[item.item_id].sellers.push({discord_id: item.discord_id, ign: item.ingame_name, price: item.user_price, rank: item.order_data.rank})
             else if (item.order_type == 'wtb')
                 itemTrades[item.item_id].buyers.push({discord_id: item.discord_id, ign: item.ingame_name, price: item.user_price, rank: item.order_data.rank})
         })
-        console.log(JSON.stringify(itemTrades))
+        var lichTrades = {}
+        data.response.lichTrades.forEach(item => {
+            if (!lichTrades[item.item_id])
+                lichTrades[item.item_id] = {item_id: item.item_id, item_url: item.item_url, icon_url: item.icon_url, sellers: [], buyers: []}
+            if (item.order_type == 'wts')
+                lichTrades[item.item_id].sellers.push({discord_id: item.discord_id, ign: item.ingame_name, price: item.user_price, order_data: item.order_data})
+            else if (item.order_type == 'wtb')
+                lichTrades[item.item_id].buyers.push({discord_id: item.discord_id, ign: item.ingame_name, price: item.user_price, order_data: item.order_data})
+        })
+        console.log(JSON.stringify(lichTrades))
         this.setState({
             itemTrades: {...itemTrades},
-            lichTrades: [],
-            rivenTrades: [],
+            lichTrades: {...lichTrades},
+            rivenTrades: {},
             loadingTrades: false,
         })
     }
@@ -85,36 +97,70 @@ class Trading extends Component {
             console.log('inserted item is not visible')
             return
         }
-        if (!this.state.itemTrades[item.item_id]) {
-            if (item.order_type == 'wts')
-                this.setState({
-                    itemTrades: {
-                        ...this.state.itemTrades,
-                        [`${item.item_id}`]: {item_id: item.item_id, item_url: item.item_url,tags: item.tags, icon_url: item.icon_url, sellers: [{discord_id: item.discord_id, ign: item.ingame_name, price: item.user_price, rank: item.order_data.rank}], buyers: []}
-                    }
-                })
-            else if (item.order_type == 'wtb')
-                this.setState({
-                    itemTrades: {
-                        ...this.state.itemTrades,
-                        [`${item.item_id}`]: {item_id: item.item_id, item_url: item.item_url,tags: item.tags, icon_url: item.icon_url, buyers: [{discord_id: item.discord_id, ign: item.ingame_name, price: item.user_price, rank: item.order_data.rank}], sellers: []}
-                    }
-                })
-        } else {
-            if (item.order_type == 'wts')
-                this.setState({
-                    itemTrades: {
-                        ...this.state.itemTrades,
-                        [`${item.item_id}`]: {...this.state.itemTrades[`${item.item_id}`], sellers: [...this.state.itemTrades[`${item.item_id}`].sellers, {discord_id: item.discord_id, ign: item.ingame_name, price: item.user_price, rank: item.order_data.rank}]}
-                    }
-                })
-            else if (item.order_type == 'wtb')
-                this.setState({
-                    itemTrades: {
-                        ...this.state.itemTrades,
-                        [`${item.item_id}`]: {...this.state.itemTrades[`${item.item_id}`], buyers: [...this.state.itemTrades[`${item.item_id}`].buyers, {discord_id: item.discord_id, ign: item.ingame_name, price: item.user_price, rank: item.order_data.rank}]}
-                    }
-                })
+        if (item.item_type == 'item') {
+            if (!this.state.itemTrades[item.item_id]) {
+                if (item.order_type == 'wts')
+                    this.setState({
+                        itemTrades: {
+                            ...this.state.itemTrades,
+                            [`${item.item_id}`]: {item_id: item.item_id, item_url: item.item_url,tags: item.tags, icon_url: item.icon_url, sellers: [{discord_id: item.discord_id, ign: item.ingame_name, price: item.user_price, rank: item.order_data.rank}], buyers: []}
+                        }
+                    })
+                else if (item.order_type == 'wtb')
+                    this.setState({
+                        itemTrades: {
+                            ...this.state.itemTrades,
+                            [`${item.item_id}`]: {item_id: item.item_id, item_url: item.item_url,tags: item.tags, icon_url: item.icon_url, buyers: [{discord_id: item.discord_id, ign: item.ingame_name, price: item.user_price, rank: item.order_data.rank}], sellers: []}
+                        }
+                    })
+            } else {
+                if (item.order_type == 'wts')
+                    this.setState({
+                        itemTrades: {
+                            ...this.state.itemTrades,
+                            [`${item.item_id}`]: {...this.state.itemTrades[`${item.item_id}`], sellers: [...this.state.itemTrades[`${item.item_id}`].sellers, {discord_id: item.discord_id, ign: item.ingame_name, price: item.user_price, rank: item.order_data.rank}]}
+                        }
+                    })
+                else if (item.order_type == 'wtb')
+                    this.setState({
+                        itemTrades: {
+                            ...this.state.itemTrades,
+                            [`${item.item_id}`]: {...this.state.itemTrades[`${item.item_id}`], buyers: [...this.state.itemTrades[`${item.item_id}`].buyers, {discord_id: item.discord_id, ign: item.ingame_name, price: item.user_price, rank: item.order_data.rank}]}
+                        }
+                    })
+            }
+        } else if (item.item_type == 'lich') {
+            if (!this.state.lichTrades[item.item_id]) {
+                if (item.order_type == 'wts')
+                    this.setState({
+                        lichTrades: {
+                            ...this.state.lichTrades,
+                            [`${item.item_id}`]: {item_id: item.item_id, item_url: item.item_url, icon_url: item.icon_url, sellers: [{discord_id: item.discord_id, ign: item.ingame_name, price: item.user_price, order_data: item.order_data}], buyers: []}
+                        }
+                    })
+                else if (item.order_type == 'wtb')
+                    this.setState({
+                        lichTrades: {
+                            ...this.state.lichTrades,
+                            [`${item.item_id}`]: {item_id: item.item_id, item_url: item.item_url, icon_url: item.icon_url, buyers: [{discord_id: item.discord_id, ign: item.ingame_name, price: item.user_price, order_data: item.order_data}], sellers: []}
+                        }
+                    })
+            } else {
+                if (item.order_type == 'wts')
+                    this.setState({
+                        lichTrades: {
+                            ...this.state.lichTrades,
+                            [`${item.item_id}`]: {...this.state.lichTrades[`${item.item_id}`], sellers: [...this.state.lichTrades[`${item.item_id}`].sellers, {discord_id: item.discord_id, ign: item.ingame_name, price: item.user_price, order_data: item.order_data}]}
+                        }
+                    })
+                else if (item.order_type == 'wtb')
+                    this.setState({
+                        lichTrades: {
+                            ...this.state.lichTrades,
+                            [`${item.item_id}`]: {...this.state.lichTrades[`${item.item_id}`], buyers: [...this.state.lichTrades[`${item.item_id}`].buyers, {discord_id: item.discord_id, ign: item.ingame_name, price: item.user_price, order_data: item.order_data}]}
+                        }
+                    })
+            }
         }
     }
     updateItemListener = (data) => {
@@ -126,17 +172,31 @@ class Trading extends Component {
         console.log(data)
         // note: response is an array, with 0th the new squad and 1st the old squad
         const item = data.response
-        this.setState(state => {
-            state.itemTrades[item.item_id].buyers = state.itemTrades[item.item_id].buyers.filter((buyer, index) => buyer.discord_id != item.discord_id)
-            state.itemTrades[item.item_id].sellers = state.itemTrades[item.item_id].sellers.filter((seller, index) => seller.discord_id != item.discord_id)
-            if (item.order_type == 'wts')
-                state.itemTrades[item.item_id].sellers = [...state.itemTrades[item.item_id].sellers, {discord_id: item.discord_id, ign: item.ingame_name, price: item.user_price, rank: item.order_data.rank}]
-            else if (item.order_type == 'wtb')
-                state.itemTrades[item.item_id].buyers = [...state.itemTrades[item.item_id].buyers, {discord_id: item.discord_id, ign: item.ingame_name, price: item.user_price, rank: item.order_data.rank}]
-            return {
-                state,
-            };
-        });
+        if (item.item_type == 'item') {
+            this.setState(state => {
+                state.itemTrades[item.item_id].buyers = state.itemTrades[item.item_id].buyers.filter((buyer, index) => buyer.discord_id != item.discord_id)
+                state.itemTrades[item.item_id].sellers = state.itemTrades[item.item_id].sellers.filter((seller, index) => seller.discord_id != item.discord_id)
+                if (item.order_type == 'wts')
+                    state.itemTrades[item.item_id].sellers = [...state.itemTrades[item.item_id].sellers, {discord_id: item.discord_id, ign: item.ingame_name, price: item.user_price, rank: item.order_data.rank}]
+                else if (item.order_type == 'wtb')
+                    state.itemTrades[item.item_id].buyers = [...state.itemTrades[item.item_id].buyers, {discord_id: item.discord_id, ign: item.ingame_name, price: item.user_price, rank: item.order_data.rank}]
+                return {
+                    state,
+                };
+            });
+        } else if (item.item_type == 'lich') {
+            this.setState(state => {
+                state.lichTrades[item.item_id].buyers = state.lichTrades[item.item_id].buyers.filter((buyer, index) => buyer.discord_id != item.discord_id)
+                state.lichTrades[item.item_id].sellers = state.lichTrades[item.item_id].sellers.filter((seller, index) => seller.discord_id != item.discord_id)
+                if (item.order_type == 'wts')
+                    state.lichTrades[item.item_id].sellers = [...state.lichTrades[item.item_id].sellers, {discord_id: item.discord_id, ign: item.ingame_name, price: item.user_price, order_data: item.order_data}]
+                else if (item.order_type == 'wtb')
+                    state.lichTrades[item.item_id].buyers = [...state.lichTrades[item.item_id].buyers, {discord_id: item.discord_id, ign: item.ingame_name, price: item.user_price, order_data: item.order_data}]
+                return {
+                    state,
+                };
+            });
+        }
     }
     deleteItemListener = (data) => {
         console.log('[Trading] hubapp/trades/deleteItem')
@@ -150,15 +210,27 @@ class Trading extends Component {
             console.log('deleted item was not visible')
             return
         }
-        this.setState(state => {
-            if (item.order_type == 'wts')
-                state.itemTrades[item.item_id].sellers = state.itemTrades[item.item_id].sellers.filter((seller, index) => seller.discord_id != item.discord_id)
-            else if (item.order_type == 'wtb')
-                state.itemTrades[item.item_id].buyers = state.itemTrades[item.item_id].buyers.filter((buyer, index) => buyer.discord_id != item.discord_id)
-            return {
-                state,
-            };
-        });
+        if (item.item_type == 'item') {
+            this.setState(state => {
+                if (item.order_type == 'wts')
+                    state.itemTrades[item.item_id].sellers = state.itemTrades[item.item_id].sellers.filter((seller, index) => seller.discord_id != item.discord_id)
+                else if (item.order_type == 'wtb')
+                    state.itemTrades[item.item_id].buyers = state.itemTrades[item.item_id].buyers.filter((buyer, index) => buyer.discord_id != item.discord_id)
+                return {
+                    state,
+                };
+            });
+        } else if (item.item_type == 'lich') {
+            this.setState(state => {
+                if (item.order_type == 'wts')
+                    state.lichTrades[item.item_id].sellers = state.lichTrades[item.item_id].sellers.filter((seller, index) => seller.discord_id != item.discord_id)
+                else if (item.order_type == 'wtb')
+                    state.lichTrades[item.item_id].buyers = state.lichTrades[item.item_id].buyers.filter((buyer, index) => buyer.discord_id != item.discord_id)
+                return {
+                    state,
+                };
+            });
+        }
     }
     addNewItemListener = (data) => {
         console.log('[Trading] hubapp/trades/addNewItem')
@@ -244,12 +316,99 @@ class Trading extends Component {
             }}
             />
         )
+    }
+    displayLichTrades = () => {
+        // get list of items
+        return (
+            <FlatList 
+            columnWrapperStyle={{flexWrap:'wrap',justifyContent:'space-evenly'}}
+            listKey={(item, index) => `_key${index.toString()}`}
+            keyExtractor={(item, index) => `_key${index.toString()}`}
+            data={Object.keys(this.state.lichTrades).map(key => {return this.state.lichTrades[key]})}
+            numColumns={5}
+            renderItem={({item, index}) => {
+                const itemInfo = item
+                itemInfo.sellers = itemInfo.sellers.sort(dynamicSort("price"))
+                itemInfo.buyers = itemInfo.buyers.sort(dynamicSortDesc("price"))
 
+                if (this.state.showSellers == 1 && itemInfo.sellers.length == 0)
+                    return (<></>)
+                if (this.state.showSellers == 0 && itemInfo.buyers.length == 0)
+                    return (<></>)
+
+                return (
+                    <View key={index} style={{borderColor: this.state.showSellers == 1 ? '#48f075':'#fc4444',  borderRadius: 10, borderWidth: 2, marginTop: 10, marginHorizontal: 5, padding: 10}}>
+                        <View style={{marginHorizontal: 10}}>
+                            <View style={{flexDirection:'row'}}>
+                                <View>
+                                    <Text style={{color: '#67e8f9', marginBottom: 10, fontSize:16, fontWeight: 'bold'}}>{convertUpper(itemInfo.item_url)}</Text>
+                                    <FlatList 
+                                    numColumns={4}
+                                    listKey={(item, index) => `_key${index.toString()}`}
+                                    keyExtractor={(item, index) => `_key${index.toString()}`}
+                                    data={[this.state.showSellers == 1 ? 'Sellers':'Buyers','Prices','Stats','Trade']}
+                                    columnWrapperStyle={{justifyContent: 'space-between'}}
+                                    renderItem={({item, index}) => {
+                                        return (
+                                            <View style={{marginHorizontal: 10}}>
+                                            <Text style={{color: '#5eead4'}}>{item}</Text>
+                                            {index == 0 ? 
+                                            <Text style={{color: 'white'}}>{this.state.showSellers == 1 ? itemInfo.sellers.map(seller => seller.ign).join('\n'):itemInfo.buyers.map(buyer => buyer.ign).join('\n')}</Text>
+                                            :index == 1 ? 
+                                            <Text style={{color: 'white'}}>{this.state.showSellers == 1 ? itemInfo.sellers.map(seller => seller.price).join('\n'):itemInfo.buyers.map(buyer => buyer.price).join('\n')}</Text>
+                                            :index == 2 ? 
+                                            <View style={{flexDirection: 'column'}}>
+                                                {itemInfo[`${this.state.showSellers == 1 ? 'sellers':'buyers'}`].map((trader,index) => 
+                                                    (
+                                                        <TouchableOpacity
+                                                        key={index}
+                                                        onPress={() => {this.setState({imageModal_show: true, imageModal_url: trader.order_data.lich_image_url})}}
+                                                        >
+                                                            <Text style={{color: '#67e8f9', textDecorationLine: 'underline'}}>View</Text>
+                                                        </TouchableOpacity>
+                                                    )
+                                                )}
+                                            </View>
+                                            :<View style={{flexDirection: 'column'}}>
+                                                {itemInfo[`${this.state.showSellers == 1 ? 'sellers':'buyers'}`].map((value,index) => 
+                                                    (value.discord_id == user_info.discord_id ? 
+                                                        <TouchableOpacity
+                                                            key={index}
+                                                            onPress={() => socket.emit('hubapp/trades/removeLich', {
+                                                                discord_id: user_info.discord_id, 
+                                                                item_id: itemInfo.item_id
+                                                            })}
+                                                        >
+                                                            <Text style={{color: '#67e8f9', textDecorationLine: 'underline'}}>Remove</Text>
+                                                        </TouchableOpacity>:
+                                                        <TouchableOpacity
+                                                        key={index}
+                                                        onPress={() => {socket.emit('hubapp/trades/openTrade',{current_discord_id: user_info.discord_id,target_discord_id: value.discord_id,item_id: itemInfo.item_id})}}
+                                                        >
+                                                            <Text style={{color: '#67e8f9', textDecorationLine: 'underline'}}>{this.state.showSellers == 1 ? 'Buy':'Sell'}</Text>
+                                                        </TouchableOpacity>
+                                                    )
+                                                )}
+                                            </View>
+                                        }
+                                            </View>
+                                        )
+                                    }}
+                                    />
+                                </View>
+                                <Image
+                                    source={{uri: `https://warframe.market/static/assets/${itemInfo.icon_url}`}}
+                                    style={{ width: 80, height: 80, resizeMode: 'contain'}}
+                                />
+                            </View>
+                        </View>
+                    </View>
+                )
+            }}
+            />
+        )
     }
-    displayLichTrades = (tradesArr) => {
-        return (<Text style={{fontSize: 32, color:'white'}}>Lich trades will display here</Text>)
-    }
-    displayRivenTrades = (tradesArr) => {
+    displayRivenTrades = () => {
         return (<Text style={{fontSize: 32, color:'white'}}>This feature is under development</Text>)
     }
 
@@ -520,6 +679,25 @@ onRequestClose={() => this.setState({formAddItem_show: false})}
         </TouchableOpacity>
     }
     onRequestClose={() => this.setState({menuModal_show: false})}
+></Modal>
+
+
+<Modal
+    animationType="none"
+    transparent={true}
+    visible={this.state.imageModal_show}
+    children={
+        <TouchableOpacity
+            style={{width: '100%',height: '100%', backgroundColor: 'black',opacity: 0.9,justifyContent: 'center',alignItems: 'center'}}
+            onPress={() => this.setState({imageModal_show: false})}
+        >
+            <Image
+                style={{width: 350, height: 350, resizeMode: 'contain'}}
+                source={{uri: this.state.imageModal_url}}
+            />
+        </TouchableOpacity>
+    }
+    onRequestClose={() => this.setState({imageModal_show: false})}
 ></Modal>
 
 

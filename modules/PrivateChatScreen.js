@@ -55,6 +55,7 @@ class PrivateChatScreen extends Component {
             console.log(data.response)
             return
         }
+        console.log(data.response.chat_arr)
         this.setState({
             trade_active: data.response.trade_active,
             last_trading_session: data.response.last_trading_session,
@@ -94,6 +95,10 @@ class PrivateChatScreen extends Component {
                                 <Text style={{color: 'grey', paddingLeft: 10, paddingTop: 5}}>{`${new Date(Number(chat.timestamp)).getDate()}/${new Date(Number(chat.timestamp)).getMonth() + 1} ${new Date(Number(chat.timestamp)).getHours()}:${new Date(Number(chat.timestamp)).getMinutes()}`}</Text>
                             </View>
                             <Text style={{color: chat.discord_id == '111111111111111111' ? '#67e8f9':'#5eead4'}}>{chat.message}</Text>
+                            {chat.attachments.length > 0 ? <Image
+                                        style={{width: 350, height: 350, resizeMode: 'contain'}}
+                                        source={{uri: chat.attachments[0]}}
+                                    />:<></>}
                         </View>
                     </View>
                 </TouchableOpacity>
