@@ -35,7 +35,7 @@ class WelcomeScreen extends Component {
                         'https://discord.com/api/oauth2/authorize?'+
                         new URLSearchParams({
                             client_id:'832682369831141417',
-                            redirect_uri:api_url+'discordOAuth2/authorize',
+                            redirect_uri:api_url+'api/discordOAuth2/authorize',
                             response_type: 'code',
                             scope:'identify email guilds',
                             state:session_key
